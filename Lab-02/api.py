@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from cipher.caesar import CaesarCipher
 from cipher.vigenere import VigenereCipher
 from cipher.railfence import RailFenceCipher
-from cipher.playfair import PlayFairCipher
+from cipher.playfair.playfair_cipher import PlayfairCipher
 
 app = Flask(__name__)
 
@@ -67,7 +67,7 @@ def decrypt():
 
 
 # ==================== PLAYFAIR CIPHER ====================
-playfair_cipher = PlayFairCipher()
+playfair_cipher = PlayfairCipher()
 
 @app.route("/api/playfair/creatematrix", methods=["POST"])
 def playfair_creatematrix():
@@ -95,6 +95,5 @@ def playfair_decrypt():
     return jsonify({"decrypted_text": decrypted_text})
 
 
-# KHỞI CHẠY SERVER (BẮT BUỘC PHẢI Ở CUỐI FILE)
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
