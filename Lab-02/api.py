@@ -81,8 +81,8 @@ def playfair_encrypt():
     data = request.json
     plain_text = data["plain_text"]
     key = data["key"]
-    playfair_matrix = playfair_cipher.create_playfair_matrix(key)
-    encrypted_text = playfair_cipher.playfair_encrypt(plain_text, playfair_matrix)
+    # Sửa từ playfair_encrypt thành encrypt_text và truyền thẳng plain_text, key
+    encrypted_text = playfair_cipher.encrypt_text(plain_text, key)
     return jsonify({"encrypted_text": encrypted_text})
 
 @app.route("/api/playfair/decrypt", methods=["POST"])
@@ -90,8 +90,8 @@ def playfair_decrypt():
     data = request.json
     cipher_text = data["cipher_text"]
     key = data["key"]
-    playfair_matrix = playfair_cipher.create_playfair_matrix(key)
-    decrypted_text = playfair_cipher.playfair_decrypt(cipher_text, playfair_matrix)
+    # Sửa từ playfair_decrypt thành decrypt_text và truyền thẳng cipher_text, key
+    decrypted_text = playfair_cipher.decrypt_text(cipher_text, key)
     return jsonify({"decrypted_text": decrypted_text})
 
 
