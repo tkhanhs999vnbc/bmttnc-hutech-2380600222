@@ -2,6 +2,14 @@ class RailFenceCipher:
     def __init__(self):
         pass
 
+    # Thêm hàm này để kết nối đúng với cách gọi trong app.py
+    def encrypt_text(self, plain_text, num_rails):
+        return self.rail_fence_encrypt(plain_text, num_rails)
+
+    # Thêm hàm này để kết nối đúng với cách gọi trong app.py
+    def decrypt_text(self, cipher_text, num_rails):
+        return self.rail_fence_decrypt(cipher_text, num_rails)
+
     def rail_fence_encrypt(self, plain_text, num_rails):
         rails = [[] for _ in range(num_rails)]
         rail_index = 0
@@ -12,7 +20,9 @@ class RailFenceCipher:
                 direction = 1
             elif rail_index == num_rails - 1:
                 direction = -1
-                rail_index += direction
+            # ĐÃ SỬA: Đưa dòng này ra ngoài câu lệnh elif để luôn cập nhật vị trí hàng rào sau mỗi ký tự
+            rail_index += direction
+            
         cipher_text = ''.join(''.join(rail) for rail in rails)
         return cipher_text
 

@@ -2,6 +2,14 @@ class VigenereCipher:
     def __init__(self):
         pass
 
+    # Thêm hàm này để trùng với cách gọi encrypt_text trong app.py
+    def encrypt_text(self, plain_text, key):
+        return self.vigenere_encrypt(plain_text, key)
+
+    # Thêm hàm này để trùng với cách gọi decrypt_text trong app.py
+    def decrypt_text(self, encrypted_text, key):
+        return self.vigenere_decrypt(encrypted_text, key)
+
     def vigenere_encrypt(self, plain_text, key):
         encrypted_text = ""
         key_index = 0
