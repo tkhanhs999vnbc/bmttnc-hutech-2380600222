@@ -14,11 +14,11 @@
                 <td>
                     <form method="POST" action="/vigenere/encrypt">
                         <div class="mb-3">
-                            <label class="form-label">Plain text (Chỉ nhập chữ cái tiếng Anh không dấu):</label>
+                            <label class="form-label">Plain text :</label>
                             <input type="text" class="form-control" name="inputPlainText" pattern="[A-Za-z\s]+" title="Văn bản chỉ được chứa ký tự chữ cái tiếng Anh không dấu (A-Z, a-z) và khoảng trắng" placeholder="Nhập chuỗi văn bản cần mã hóa" required autofocus/>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Key (Chuỗi ký tự chữ cái viết liền):</label>
+                            <label class="form-label">Key:</label>
                             <input type="text" class="form-control" name="inputKeyPlain" pattern="[A-Za-z]+" title="Khóa (Key) chỉ được phép chứa các ký tự chữ cái và viết liền không dấu cách" placeholder="Ví dụ: KEYWORD" required/>
                         </div>
                         <button type="submit" class="btn btn-primary">Encrypt</button>
@@ -30,11 +30,11 @@
                 <td>
                     <form method="POST" action="/vigenere/decrypt">
                         <div class="mb-3">
-                            <label class="form-label">Cipher text (Chỉ nhập chữ cái tiếng Anh không dấu):</label>
+                            <label class="form-label">Cipher text :</label>
                             <input type="text" class="form-control" name="inputCipherText" pattern="[A-Za-z\s]+" title="Văn bản mật mã chỉ được chứa ký tự chữ cái tiếng Anh không dấu (A-Z, a-z) và khoảng trắng" placeholder="Nhập chuỗi mật mã" required/>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Key (Chuỗi ký tự chữ cái viết liền):</label>
+                            <label class="form-label">Key:</label>
                             <input type="text" class="form-control" name="inputKeyCipher" pattern="[A-Za-z]+" title="Khóa (Key) chỉ được phép chứa các ký tự chữ cái và viết liền không dấu cách" placeholder="Nhập chuỗi khóa giải mã" required/>
                         </div>
                         <button type="submit" class="btn btn-success">Decrypt</button>
