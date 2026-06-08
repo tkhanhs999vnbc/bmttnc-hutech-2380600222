@@ -1,5 +1,6 @@
 import sys
 import os
+import re  # Sử dụng thư viện re để kiểm tra định dạng chữ cái tiếng Anh chuẩn
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 import requests
 
@@ -15,68 +16,112 @@ class PlayfairApp(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.pushButton.clicked.connect(self.call_api_encrypt)
-        self.ui.pushButton_2.clicked.connect(self.call_api_decrypt)
+        
+        try:
+            self.ui.pushButton.clicked.connect(self.call_api_encrypt)
+            self.ui.pushButton_2.clicked.connect(self.call_api_decrypt)
+        except AttributeError as e:
+            print(f"Lỗi kết nối nút bấm UI: {e}")
+
+    def validate_input(self, text, key, mode="encrypt"):
+        text_type = "Văn bản gốc (Plain Text)" if mode == "encrypt" else "Bản mã (Cipher Text)"
+        clean_text = text.strip()
+        clean_key = key.strip()
+
+        # 1. Kiểm tra trống dữ liệu văn bản
+        if not clean_text:
+            QMessageBox.warning(self, "Lỗi Nhập Liệu", f"{text_type} không được để trống!")
+            return False
+
+        # 2. RÀNG BUỘC VĂN BẢN: Chỉ chấp nhận chữ cái tiếng Anh không dấu và khoảng trắng
+        if not re.match(r"^[a-zA-Z\s]+$", clean_text):
+            QMessageBox.warning(
+                self, 
+                "Lỗi Nhập Liệu", 
+                f"{text_type} chỉ được phép chứa các chữ cái tiếng Anh không dấu (A-Z, a-z).\n"
+                "Vui lòng không nhập số, ký tự đặc biệt hoặc chữ tiếng Việt có dấu!"
+            )
+            return False
+
+        # 3. Kiểm tra trống dữ liệu Khóa
+        if not clean_key:
+            QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa (Key) không được để trống!")
+            return False
+
+        # 4. RÀNG BUỘC KHÓA (KEY): Phải chứa chữ cái tiếng Anh không dấu
+        if not re.match(r"^[a-zA-Z\s]+$", clean_key):
+            QMessageBox.warning(
+                self, 
+                "Lỗi Nhập Liệu", 
+                "Khóa Playfair chỉ được phép chứa các chữ cái tiếng Anh không dấu (A-Z, a-z) để khởi tạo ma trận!\n"
+                "Vui lòng không nhập số hoặc ký tự đặc biệt."
+            )
+            return False
+
+        # Lọc lại chuỗi khóa viết hoa để kiểm tra logic ma trận như code cũ của bạn
+        upper_key = re.sub(r'[^A-Z]', '', clean_key.upper())
+        if not upper_key:
+            QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa Playfair phải chứa ít nhất một ký tự chữ cái hợp lệ!")
+            return False
+
+        # 5. RÀNG BUỘC GIẢI MÃ: Bản mã Playfair bắt buộc phải có tổng số chữ cái là số chẵn
+        if mode == "decrypt":
+            upper_cipher = re.sub(r'[^A-Z]', '', clean_text.upper())
+            if len(upper_cipher) % 2 != 0:
+                QMessageBox.warning(self, "Lỗi Định Dạng", "Bản mã Playfair không hợp lệ! Độ dài tổng số chữ cái bắt buộc phải là một số chẵn.")
+                return False
+
+        return True
 
     def call_api_encrypt(self):
         url = "http://127.0.0.1:5000/api/playfair/encrypt"
         
-        plain_text = self.ui.textEdit.toPlainText().strip()
-        key_text = self.ui.textEdit_2.toPlainText().strip()
-
-        if not key_text or not plain_text:
-            QMessageBox.warning(self, "Warning", "Please enter Plain Text and Key!")
+        try:
+            plain_text = self.ui.textEdit.toPlainText()
+            key = self.ui.textEdit_2.toPlainText()
+        except AttributeError as e:
+            QMessageBox.critical(self, "Lỗi Hệ Thống", f"Không tìm thấy cấu phần ô nhập liệu trên UI: {e}")
             return
 
-        payload = {
-            "plain_text": plain_text,
-            "key": key_text
-        }
+        if not self.validate_input(plain_text, key, "encrypt"):
+            return
+
+        payload = {"plain_text": plain_text.strip(), "key": key.strip()}
         try:
             response = requests.post(url, json=payload)
             if response.status_code == 200:
                 data = response.json()
                 self.ui.textEdit_3.setText(data["encrypted_text"])
-                
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Information)
-                msg.setText("Playfair Encrypted Successfully")
-                msg.exec_()
+                QMessageBox.information(self, "Thành Công", "Mã hóa Playfair thành công!")
             else:
-                print("Server error code: %s" % response.status_code)
-                QMessageBox.critical(self, "Server Error", "Server failed to encrypt. Check backend.")
+                QMessageBox.critical(self, "Lỗi Server", f"Server phản hồi mã lỗi: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print("Network Error: %s" % e)
+            QMessageBox.critical(self, "Lỗi Mạng", f"Không thể kết nối đến Server Flask!\nChi tiết: {e}")
 
     def call_api_decrypt(self):
         url = "http://127.0.0.1:5000/api/playfair/decrypt"
         
-        cipher_text = self.ui.textEdit_3.toPlainText().strip()
-        key_text = self.ui.textEdit_2.toPlainText().strip()
-
-        if not key_text or not cipher_text:
-            QMessageBox.warning(self, "Warning", "Please enter Cipher Text and Key!")
+        try:
+            cipher_text = self.ui.textEdit_3.toPlainText()
+            key = self.ui.textEdit_2.toPlainText()
+        except AttributeError as e:
+            QMessageBox.critical(self, "Lỗi Hệ Thống", f"Không tìm thấy cấu phần ô nhập liệu trên UI: {e}")
             return
 
-        payload = {
-            "cipher_text": cipher_text,
-            "key": key_text
-        }
+        if not self.validate_input(cipher_text, key, "decrypt"):
+            return
+
+        payload = {"cipher_text": cipher_text.strip(), "key": key.strip()}
         try:
             response = requests.post(url, json=payload)
             if response.status_code == 200:
                 data = response.json()
                 self.ui.textEdit.setText(data["decrypted_text"])
-                
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Information)
-                msg.setText("Playfair Decrypted Successfully")
-                msg.exec_()
+                QMessageBox.information(self, "Thành Công", "Giải mã Playfair thành công!")
             else:
-                print("Server error code: %s" % response.status_code)
-                QMessageBox.critical(self, "Server Error", "Server failed to decrypt. Check backend.")
+                QMessageBox.critical(self, "Lỗi Server", f"Server phản hồi mã lỗi: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print("Network Error: %s" % e)
+            QMessageBox.critical(self, "Lỗi Mạng", f"Không thể kết nối đến Server Flask!\nChi tiết: {e}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

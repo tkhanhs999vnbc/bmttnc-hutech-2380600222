@@ -2,12 +2,14 @@ class RailFenceCipher:
     def __init__(self):
         pass
 
-    # Thêm hàm này để kết nối đúng với cách gọi trong app.py
     def encrypt_text(self, plain_text, num_rails):
+        if num_rails < 2:
+            raise ValueError("Số hàng rào (Key) của Rail Fence phải lớn hơn hoặc bằng 2!")
         return self.rail_fence_encrypt(plain_text, num_rails)
 
-    # Thêm hàm này để kết nối đúng với cách gọi trong app.py
     def decrypt_text(self, cipher_text, num_rails):
+        if num_rails < 2:
+            raise ValueError("Số hàng rào (Key) của Rail Fence phải lớn hơn hoặc bằng 2!")
         return self.rail_fence_decrypt(cipher_text, num_rails)
 
     def rail_fence_encrypt(self, plain_text, num_rails):
@@ -20,7 +22,6 @@ class RailFenceCipher:
                 direction = 1
             elif rail_index == num_rails - 1:
                 direction = -1
-            # ĐÃ SỬA: Đưa dòng này ra ngoài câu lệnh elif để luôn cập nhật vị trí hàng rào sau mỗi ký tự
             rail_index += direction
             
         cipher_text = ''.join(''.join(rail) for rail in rails)

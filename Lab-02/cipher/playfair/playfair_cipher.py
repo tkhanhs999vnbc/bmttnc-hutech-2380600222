@@ -1,15 +1,12 @@
-class PlayfairCipher: # Đã đổi chữ F thành f để trùng với app.py
-
+class PlayfairCipher: 
     def __init__(self):
         pass
 
     def create_playfair_matrix(self, key):
-        # Loại bỏ các ký tự không phải chữ cái và khoảng trắng trong key
         key = "".join([c for c in key if c.isalpha()])
         key = key.replace("J", "I")
         key = key.upper()
         
-        # Giữ lại các ký tự duy nhất theo thứ tự xuất hiện
         unique_key = []
         for letter in key:
             if letter not in unique_key:
@@ -37,9 +34,10 @@ class PlayfairCipher: # Đã đổi chữ F thành f để trùng với app.py
                     return row, col
         return 0, 0
 
-    # Hàm interface chuẩn để app.py gọi
     def encrypt_text(self, plain_text, key):
-        # Tự động lọc text đầu vào chỉ lấy chữ cái
+        if not key or not "".join([c for c in key if c.isalpha()]):
+            raise ValueError("Key của Playfair phải chứa các ký tự chữ cái!")
+            
         plain_text = "".join([c for c in plain_text if c.isalpha()])
         matrix = self.create_playfair_matrix(key)
         
@@ -51,9 +49,8 @@ class PlayfairCipher: # Đã đổi chữ F thành f để trùng với app.py
             pair = plain_text[i : i + 2]
             if len(pair) == 1:
                 pair += "X"
-            elif pair[0] == pair[1]: # Xử lý nếu 2 chữ trùng nhau trong 1 cặp
+            elif pair[0] == pair[1]:
                 pair = pair[0] + "X"
-                # Hạ index xuống 1 đơn vị vì chữ thứ 2 sẽ được xét ở cặp kế tiếp
                 plain_text = plain_text[:i+1] + "X" + plain_text[i+1:]
                 
             row1, col1 = self.find_letter_coords(matrix, pair[0])
@@ -70,8 +67,10 @@ class PlayfairCipher: # Đã đổi chữ F thành f để trùng với app.py
                 encrypted_text += matrix[row1][col2] + matrix[row2][col1]
         return encrypted_text
 
-    # Hàm interface chuẩn để app.py gọi
     def decrypt_text(self, cipher_text, key):
+        if not key or not "".join([c for c in key if c.isalpha()]):
+            raise ValueError("Key của Playfair phải chứa các ký tự chữ cái!")
+            
         cipher_text = "".join([c for c in cipher_text if c.isalpha()])
         matrix = self.create_playfair_matrix(key)
         
