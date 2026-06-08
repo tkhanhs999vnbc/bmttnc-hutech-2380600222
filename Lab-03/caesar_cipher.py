@@ -32,7 +32,6 @@ class CaesarApp(QMainWindow):
             return False
             
         # RÀNG BUỘC CHẶN CHỮ CÓ DẤU, SỐ VÀ KÝ TỰ ĐẶC BIỆT:
-        # Chỉ chấp nhận chữ cái tiếng Anh không dấu (A-Z, a-z) và khoảng trắng
         if not re.match(r"^[a-zA-Z\s]+$", clean_text):
             QMessageBox.warning(
                 self, 
@@ -42,17 +41,26 @@ class CaesarApp(QMainWindow):
             )
             return False
             
-        if not key_str.strip():
+        clean_key = key_str.strip()
+        if not clean_key:
             QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa (Key) không được để trống!")
             return False
 
-        if not key_str.isdigit():
-            QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa phải là một số nguyên hợp lệ (không chứa chữ cái hoặc ký tự đặc biệt)!")
+        # ĐÃ SỬA: Thay thế .isdigit() bằng Regex hỗ trợ dấu âm (-) ở đầu
+        # ^-?\d+$ có nghĩa là: có thể có hoặc không có dấu trừ, theo sau bắt buộc là các chữ số
+        if not re.match(r"^-?\d+$", clean_key):
+            QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa phải là một số nguyên hợp lệ (ví dụ: 3 hoặc -3)!")
             return False
 
-        key = int(key_str)
-        if key < 1 or key > 25:
-            QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa dịch chuyển mật mã Caesar phải nằm trong khoảng từ 1 đến 25!")
+        key = int(clean_key)
+        
+        # ĐÃ SỬA: Luật mới chặn số 0 và giới hạn độ lớn từ -25 đến 25
+        if key == 0 or not (-25 <= key <= 25):
+            QMessageBox.warning(
+                self, 
+                "Lỗi Nhập Liệu", 
+                "Khóa dịch chuyển mật mã Caesar phải nằm trong khoảng từ -25 đến 25 và phải khác 0!"
+            )
             return False
 
         return True
@@ -78,7 +86,9 @@ class CaesarApp(QMainWindow):
                 self.ui.textEdit_3.setText(data["encrypted_message"])
                 QMessageBox.information(self, "Thành Công", "Mã hóa Caesar thành công!")
             else:
-                QMessageBox.critical(self, "Lỗi Server", f"Server phản hồi mã lỗi: {response.status_code}")
+                data = response.json() if response.headers.get('content-type') == 'application/json' else {}
+                error_msg = data.get("error", f"Server phản hồi mã lỗi: {response.status_code}")
+                QMessageBox.critical(self, "Lỗi Server", error_msg)
         except requests.exceptions.RequestException as e:
             QMessageBox.critical(self, "Lỗi Mạng", f"Không thể kết nối đến Server Flask!\nChi tiết: {e}")
 
@@ -103,7 +113,9 @@ class CaesarApp(QMainWindow):
                 self.ui.textEdit.setText(data["decrypted_message"])
                 QMessageBox.information(self, "Thành Công", "Giải mã Caesar thành công!")
             else:
-                QMessageBox.critical(self, "Lỗi Server", f"Server phản hồi mã lỗi: {response.status_code}")
+                data = response.json() if response.headers.get('content-type') == 'application/json' else {}
+                error_msg = data.get("error", f"Server phản hồi mã lỗi: {response.status_code}")
+                QMessageBox.critical(self, "Lỗi Server", error_msg)
         except requests.exceptions.RequestException as e:
             QMessageBox.critical(self, "Lỗi Mạng", f"Không thể kết nối đến Server Flask!\nChi tiết: {e}")
 
