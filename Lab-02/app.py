@@ -1,4 +1,9 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
+from io import BytesIO
+import base64
+import os
+import subprocess
+from PIL import Image
 
 from cipher.caesar.caesar_cipher import CaesarCipher
 from cipher.vigenere.vigenere_cipher import VigenereCipher
@@ -6,6 +11,47 @@ from cipher.railfence.railfence_cipher import RailFenceCipher
 from cipher.playfair.playfair_cipher import PlayfairCipher
 
 app = Flask(__name__)
+
+@app.route("/api/process", methods=["POST"])
+def api_process():
+    data = request.json
+    algo = data.get("algorithm")
+    action = data.get("action")
+    text = data.get("text")
+    key = data.get("key")
+    
+    try:
+        if algo == "caesar":
+            cipher = CaesarCipher()
+            key = int(key)
+            if action == "encrypt":
+                return jsonify(success=True, result=cipher.encrypt_text(text, key))
+            else:
+                return jsonify(success=True, result=cipher.decrypt_text(text, key))
+        elif algo == "vigenere":
+            cipher = VigenereCipher()
+            if action == "encrypt":
+                return jsonify(success=True, result=cipher.encrypt_text(text, key))
+            else:
+                return jsonify(success=True, result=cipher.decrypt_text(text, key))
+        elif algo == "railfence":
+            cipher = RailFenceCipher()
+            key = int(key)
+            if action == "encrypt":
+                return jsonify(success=True, result=cipher.encrypt_text(text, key))
+            else:
+                return jsonify(success=True, result=cipher.decrypt_text(text, key))
+        elif algo == "playfair":
+            cipher = PlayfairCipher()
+            if action == "encrypt":
+                return jsonify(success=True, result=cipher.encrypt_text(text, key))
+            else:
+                return jsonify(success=True, result=cipher.decrypt_text(text, key))
+        else:
+            return jsonify(success=False, error="Unknown algorithm")
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
+
 
 # Định nghĩa một hàm tiện ích để xuất thông báo lỗi đồng bộ, dễ nhìn
 def render_error(message, back_url):
@@ -142,5 +188,124 @@ def playfair_decrypt():
         return render_error(str(e), "/playfair")
 
 
+# ==================== STEGANOGRAPHY ====================
+def encode_image(image_file, message):
+    img = Image.open(image_file)
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+    width, height = img.size
+    message += '[EOF]'
+    binary_message = ''.join(format(ord(char), '08b') for char in message)
+    
+    data_index = 0
+    msg_len = len(binary_message)
+    pixels = img.load()
+    
+    for row in range(height):
+        for col in range(width):
+            if data_index < msg_len:
+                r, g, b = pixels[col, row]
+                
+                if data_index < msg_len:
+                    r = int(format(r, '08b')[:-1] + binary_message[data_index], 2)
+                    data_index += 1
+                if data_index < msg_len:
+                    g = int(format(g, '08b')[:-1] + binary_message[data_index], 2)
+                    data_index += 1
+                if data_index < msg_len:
+                    b = int(format(b, '08b')[:-1] + binary_message[data_index], 2)
+                    data_index += 1
+                    
+                pixels[col, row] = (r, g, b)
+            else:
+                break
+        if data_index >= msg_len:
+            break
+            
+    return img
+
+def decode_image(image_file):
+    img = Image.open(image_file)
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+    width, height = img.size
+    
+    binary_message = ""
+    pixels = img.load()
+    
+    for row in range(height):
+        for col in range(width):
+            r, g, b = pixels[col, row]
+            binary_message += format(r, '08b')[-1]
+            binary_message += format(g, '08b')[-1]
+            binary_message += format(b, '08b')[-1]
+            
+    message = ""
+    for i in range(0, len(binary_message), 8):
+        byte = binary_message[i:i+8]
+        if len(byte) < 8:
+            break
+        message += chr(int(byte, 2))
+        if message.endswith('[EOF]'):
+            return message[:-5]
+            
+    return message
+
+@app.route("/api/stego/encode", methods=["POST"])
+def stego_encode():
+    if 'image' not in request.files:
+        return jsonify(success=False, error="Không tìm thấy file ảnh")
+    
+    image_file = request.files['image']
+    text = request.form.get('text', '')
+    
+    if not text:
+        return jsonify(success=False, error="Vui lòng nhập nội dung cần giấu")
+        
+    try:
+        encoded_img = encode_image(image_file, text)
+        img_io = BytesIO()
+        encoded_img.save(img_io, 'PNG')
+        img_io.seek(0)
+        img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
+        
+        return jsonify(success=True, image_base64=img_base64)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
+
+@app.route("/api/stego/decode", methods=["POST"])
+def stego_decode():
+    if 'image' not in request.files:
+        return jsonify(success=False, error="Không tìm thấy file ảnh")
+        
+    image_file = request.files['image']
+    
+    try:
+        decoded_text = decode_image(image_file)
+        return jsonify(success=True, result=decoded_text)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
+
+@app.route("/launch_lab03/<algo>", methods=["POST"])
+def launch_lab03(algo):
+    try:
+        lab03_dir = r"m:\THBMTTNC\Lab-03"
+        scripts = {
+            "caesar": "caesar_cipher.py",
+            "vigenere": "vigenere_cipher.py",
+            "railfence": "railfence_cipher.py",
+            "playfair": "playfair_cipher.py"
+        }
+        
+        if algo in scripts:
+            script_path = os.path.join(lab03_dir, scripts[algo])
+            subprocess.Popen(["python", script_path], cwd=lab03_dir)
+            return jsonify(success=True)
+        else:
+            return jsonify(success=False, error="Algorithm not found")
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=True)
+
