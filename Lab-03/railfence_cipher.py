@@ -1,6 +1,6 @@
 import sys
 import os
-import re  # Sử dụng thư viện re để kiểm tra định dạng chữ cái tiếng Anh chuẩn
+import re  # Sử dụng thư viện re để đếm chữ cái và kiểm tra định dạng Key
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 import requests
 
@@ -32,24 +32,16 @@ class RailFenceApp(QMainWindow):
             QMessageBox.warning(self, "Lỗi Nhập Liệu", f"{text_type} không được để trống!")
             return False
 
-        # 2. RÀNG BUỘC VĂN BẢN: Chỉ chấp nhận chữ cái tiếng Anh không dấu và khoảng trắng
-        if not re.match(r"^[a-zA-Z\s]+$", clean_text):
-            QMessageBox.warning(
-                self, 
-                "Lỗi Nhập Liệu", 
-                f"{text_type} chỉ được phép chứa các chữ cái tiếng Anh không dấu (A-Z, a-z).\n"
-                "Vui lòng không nhập số, ký tự đặc biệt hoặc chữ tiếng Việt có dấu!"
-            )
-            return False
+        # ĐÃ XÓA: Bỏ hoàn toàn mục "2. RÀNG BUỘC VĂN BẢN" để người dùng nhập chữ, số, ký tự đặc biệt tự do
 
         # 3. Kiểm tra trống dữ liệu Khóa
         if not key_str.strip():
             QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa (Số hàng) không được để trống!")
             return False
 
-        # 4. Kiểm tra xem khóa có phải là số hay không
+        # 4. Kiểm tra định dạng Khóa (phải là số nguyên dương)
         if not key_str.strip().isdigit():
-            QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa phải là một số nguyên hợp lệ!")
+            QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa hàng rào phải là một số nguyên dương hợp lệ!")
             return False
 
         key = int(key_str.strip())
@@ -59,9 +51,17 @@ class RailFenceApp(QMainWindow):
             QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa hàng rào (Số hàng) phải lớn hơn hoặc bằng 2!")
             return False
 
-        # 6. Kiểm tra điều kiện logic: số hàng phải nhỏ hơn độ dài chuỗi
-        if key >= len(clean_text):
-            QMessageBox.warning(self, "Lỗi Logic", f"Số hàng ({key}) phải nhỏ hơn độ dài của văn bản cần xử lý ({len(clean_text)})!")
+        # 6. SỬA ĐỔI LOGIC MỚI: Đếm số chữ cái thực tế (bỏ qua số, khoảng trắng, ký tự đặc biệt)
+        pure_letters = [char for char in clean_text if char.isalpha()]
+        letter_count = len(pure_letters)
+
+        if key >= letter_count:
+            QMessageBox.warning(
+                self, 
+                "Lỗi Logic", 
+                f"Số hàng rào ({key}) phải nhỏ hơn số lượng chữ cái thực tế cần mã hóa trong văn bản ({letter_count} chữ)!\n"
+                "Nếu không, thuật toán zigzag sẽ không thể thực hiện."
+            )
             return False
 
         return True

@@ -5,40 +5,42 @@ class CaesarCipher:
         self.alphabet = ALPHABET
 
     def encrypt_text(self, text: str, key: int) -> str:
-        # LUẬT MỚI: Key bắt buộc phải nằm trong khoảng [-25, 25] và không được bằng 0
-        if key == 0 or not (-25 <= key <= 25):
-            raise ValueError("Key của Caesar phải nằm trong khoảng từ -25 đến 25 (và khác 0)!")
+        alphabet_len = len(self.alphabet) # 26
+        
+        # RÀNG BUỘC CHUẨN: Chặn số 0 và chặn luôn tất cả các số chia hết cho 26 (vì làm dư bằng 0, chữ giữ nguyên)
+        if key == 0 or key % alphabet_len == 0:
+            raise ValueError("Key không được bằng 0 hoặc chia hết cho 26 (vì sẽ làm văn bản giữ nguyên)!")
             
-        alphabet_len = len(self.alphabet)
+        # Khi đã vượt qua kiểm tra trên, chắc chắn dư sẽ từ 1 đến 25 (hoặc từ -1 đến -25)
+        effective_key = key % alphabet_len
+            
         text = text.upper()
         encrypted_text = []
         for letter in text:
-            # Ràng buộc ký tự hợp lệ
-            if letter not in self.alphabet:
-                raise ValueError(f"Ký tự '{letter}' không nằm trong bảng chữ cái hỗ trợ!")
-            
-            letter_index = self.alphabet.index(letter)
-            # Phép % xử lý hoàn hảo cho cả key dương và key âm trong khoảng [-25, 25]
-            output_index = (letter_index + key) % alphabet_len
-            output_letter = self.alphabet[output_index]
-            encrypted_text.append(output_letter)
+            if letter in self.alphabet:
+                letter_index = self.alphabet.index(letter)
+                output_index = (letter_index + effective_key) % alphabet_len
+                encrypted_text.append(self.alphabet[output_index])
+            else:
+                encrypted_text.append(letter) 
         return "".join(encrypted_text)
 
     def decrypt_text(self, text: str, key: int) -> str:
-        # LUẬT MỚI: Áp dụng tương tự cho hàm giải mã
-        if key == 0 or not (-25 <= key <= 25):
-            raise ValueError("Key của Caesar phải nằm trong khoảng từ -25 đến 25 (và khác 0)!")
-            
         alphabet_len = len(self.alphabet)
+        
+        # Áp dụng tương tự cho hàm giải mã
+        if key == 0 or key % alphabet_len == 0:
+            raise ValueError("Key không được bằng 0 hoặc chia hết cho 26 (vì sẽ làm văn bản giữ nguyên)!")
+            
+        effective_key = key % alphabet_len
+            
         text = text.upper()
         decrypted_text = []
         for letter in text:
-            if letter not in self.alphabet:
-                raise ValueError(f"Ký tự '{letter}' không hợp lệ!")
-            
-            letter_index = self.alphabet.index(letter)
-            # Giải mã dịch ngược lại bằng cách trừ key
-            output_index = (letter_index - key) % alphabet_len
-            output_letter = self.alphabet[output_index]
-            decrypted_text.append(output_letter)
+            if letter in self.alphabet:
+                letter_index = self.alphabet.index(letter)
+                output_index = (letter_index - effective_key) % alphabet_len
+                decrypted_text.append(self.alphabet[output_index])
+            else:
+                decrypted_text.append(letter)
         return "".join(decrypted_text)

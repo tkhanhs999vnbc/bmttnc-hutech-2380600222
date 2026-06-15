@@ -16,11 +16,18 @@
                     <form method="POST" action="/encrypt">
                         <div class="mb-3">
                             <label class="form-label">Plain text:</label>
-                            <input type="text" class="form-control" name="inputPlainText" pattern="[A-Za-z\s]+" title="Văn bản chỉ được chứa ký tự chữ cái tiếng Anh không dấu (A-Z, a-z) và khoảng trắng" placeholder="Input Plain Text" required autofocus/>
+                            <input type="text" class="form-control" name="inputPlainText" placeholder="Input Plain Text" required autofocus/>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Key (Số nguyên từ -25 đến 25, khác 0):</label>
-                            <input type="number" class="form-control" name="inputKeyPlain" min="-25" max="25" placeholder="Nhập số từ -25 đến 25" required/>
+                            <label class="form-label">Key:</label>
+                            <input type="number" 
+                                   step="1"
+                                   class="form-control" 
+                                   name="inputKeyPlain" 
+                                   placeholder="Nhập số nguyên" 
+                                   oninput="if(this.value=='0') { this.setCustomValidity('Key không được bằng 0!'); this.reportValidity(); this.value=''; } else { this.setCustomValidity(''); }"
+                                   oninvalid="this.setCustomValidity('Vui lòng chỉ nhập số nguyên và không để trống!')"
+                                   required/>
                         </div>
                         <button type="submit" class="btn btn-primary">Encrypt</button>
                     </form>
@@ -32,11 +39,18 @@
                     <form method="POST" action="/decrypt">
                         <div class="mb-3">
                             <label class="form-label">Cipher text:</label>
-                            <input type="text" class="form-control" name="inputCipherText" pattern="[A-Za-z\s]+" title="Văn bản mật mã chỉ được chứa ký tự chữ cái tiếng Anh không dấu (A-Z, a-z) và khoảng trắng" placeholder="Input Cipher Text" required/>
+                            <input type="text" class="form-control" name="inputCipherText" placeholder="Input Cipher Text" required/>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Key (Số nguyên từ -25 đến 25, khác 0):</label>
-                            <input type="number" class="form-control" name="inputKeyCipher" min="-25" max="25" placeholder="Nhập số từ -25 đến 25" required/>
+                            <label class="form-label">Key:</label>
+                            <input type="number" 
+                                   step="1"
+                                   class="form-control" 
+                                   name="inputKeyCipher" 
+                                   placeholder="Nhập số nguyên" 
+                                   oninput="if(this.value=='0') { this.setCustomValidity('Key không được bằng 0!'); this.reportValidity(); this.value=''; } else { this.setCustomValidity(''); }"
+                                   oninvalid="this.setCustomValidity('Vui lòng chỉ nhập số nguyên và không để trống!')"
+                                   required/>
                         </div>
                         <button type="submit" class="btn btn-success">Decrypt</button>
                     </form>

@@ -1,6 +1,6 @@
 import sys
 import os
-import re  # Sử dụng thư viện re để kiểm tra định dạng chữ cái tiếng Anh chuẩn
+import re  # Sử dụng thư viện re để kiểm tra định dạng
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 import requests
 
@@ -33,28 +33,19 @@ class PlayfairApp(QMainWindow):
             QMessageBox.warning(self, "Lỗi Nhập Liệu", f"{text_type} không được để trống!")
             return False
 
-        # 2. RÀNG BUỘC VĂN BẢN: Chỉ chấp nhận chữ cái tiếng Anh không dấu và khoảng trắng
-        if not re.match(r"^[a-zA-Z\s]+$", clean_text):
-            QMessageBox.warning(
-                self, 
-                "Lỗi Nhập Liệu", 
-                f"{text_type} chỉ được phép chứa các chữ cái tiếng Anh không dấu (A-Z, a-z).\n"
-                "Vui lòng không nhập số, ký tự đặc biệt hoặc chữ tiếng Việt có dấu!"
-            )
-            return False
+        # ĐÃ XÓA: Bỏ hoàn toàn mục "2. RÀNG BUỘC VĂN BẢN" chặn số và ký tự đặc biệt cũ để thả tự do văn bản.
 
         # 3. Kiểm tra trống dữ liệu Khóa
         if not clean_key:
             QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa (Key) không được để trống!")
             return False
 
-        # 4. RÀNG BUỘC KHÓA (KEY): Phải chứa chữ cái tiếng Anh không dấu
-        if not re.match(r"^[a-zA-Z\s]+$", clean_key):
+        # 4. GIỮ NGUYÊN RÀNG BUỘC KHÓA (KEY): Bắt buộc phải có chữ cái tiếng Anh để khởi tạo ma trận 5x5
+        if not re.search(r"[a-zA-Z]", clean_key):
             QMessageBox.warning(
                 self, 
                 "Lỗi Nhập Liệu", 
-                "Khóa Playfair chỉ được phép chứa các chữ cái tiếng Anh không dấu (A-Z, a-z) để khởi tạo ma trận!\n"
-                "Vui lòng không nhập số hoặc ký tự đặc biệt."
+                "Khóa Playfair bắt buộc phải chứa ký tự chữ cái tiếng Anh (A-Z, a-z) để khởi tạo ma trận!"
             )
             return False
 
@@ -64,11 +55,15 @@ class PlayfairApp(QMainWindow):
             QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa Playfair phải chứa ít nhất một ký tự chữ cái hợp lệ!")
             return False
 
-        # 5. RÀNG BUỘC GIẢI MÃ: Bản mã Playfair bắt buộc phải có tổng số chữ cái là số chẵn
+        # 5. GIỮ NGUYÊN RÀNG BUỘC GIẢI MÃ: Tổng số chữ cái thuần túy để giải mã bắt buộc phải là số chẵn
         if mode == "decrypt":
             upper_cipher = re.sub(r'[^A-Z]', '', clean_text.upper())
             if len(upper_cipher) % 2 != 0:
-                QMessageBox.warning(self, "Lỗi Định Dạng", "Bản mã Playfair không hợp lệ! Độ dài tổng số chữ cái bắt buộc phải là một số chẵn.")
+                QMessageBox.warning(
+                    self, 
+                    "Lỗi Định Dạng", 
+                    "Bản mã Playfair không hợp lệ! Tổng số lượng các chữ cái trong văn bản bắt buộc phải là một số chẵn để chia cặp."
+                )
                 return False
 
         return True

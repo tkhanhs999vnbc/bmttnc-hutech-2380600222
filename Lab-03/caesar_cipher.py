@@ -1,6 +1,6 @@
 import sys
 import os
-import re  # Sử dụng thư viện re để kiểm tra định dạng chữ cái tiếng Anh
+import re  # Sử dụng thư viện re để kiểm tra định dạng số của Key
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 import requests
 
@@ -27,39 +27,33 @@ class CaesarApp(QMainWindow):
         text_type = "Văn bản gốc (Plain Text)" if mode == "encrypt" else "Bản mã (Cipher Text)"
         clean_text = text.strip()
         
+        # 1. KIỂM TRA VĂN BẢN
         if not clean_text:
             QMessageBox.warning(self, "Lỗi Nhập Liệu", f"{text_type} không được để trống!")
             return False
             
-        # RÀNG BUỘC CHẶN CHỮ CÓ DẤU, SỐ VÀ KÝ TỰ ĐẶC BIỆT:
-        if not re.match(r"^[a-zA-Z\s]+$", clean_text):
-            QMessageBox.warning(
-                self, 
-                "Lỗi Nhập Liệu", 
-                f"{text_type} chỉ được phép chứa các chữ cái tiếng Anh không dấu (A-Z, a-z).\n"
-                "Vui lòng không nhập số, ký tự đặc biệt hoặc chữ tiếng Việt có dấu (như ư, á, à, ó...)!"
-            )
-            return False
-            
+        # ĐÃ XÓA: Bỏ hoàn toàn đoạn re.match cũ chặn số/ký tự đặc biệt của văn bản để cho phép nhập tự do.
+
+        # 2. KIỂM TRA KHÓA (KEY)
         clean_key = key_str.strip()
         if not clean_key:
             QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa (Key) không được để trống!")
             return False
 
-        # ĐÃ SỬA: Thay thế .isdigit() bằng Regex hỗ trợ dấu âm (-) ở đầu
-        # ^-?\d+$ có nghĩa là: có thể có hoặc không có dấu trừ, theo sau bắt buộc là các chữ số
+        # Ràng buộc bắt buộc phải gõ số nguyên (cho phép số âm với dấu -)
         if not re.match(r"^-?\d+$", clean_key):
             QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa phải là một số nguyên hợp lệ (ví dụ: 3 hoặc -3)!")
             return False
 
         key = int(clean_key)
         
-        # ĐÃ SỬA: Luật mới chặn số 0 và giới hạn độ lớn từ -25 đến 25
-        if key == 0 or not (-25 <= key <= 25):
+        # ĐÃ SỬA: Luật mới chặn số 0 và chặn luôn tất cả các số chia hết cho 26 (bội của 26 như 26, 52, -26...)
+        if key == 0 or key % 26 == 0:
             QMessageBox.warning(
                 self, 
                 "Lỗi Nhập Liệu", 
-                "Khóa dịch chuyển mật mã Caesar phải nằm trong khoảng từ -25 đến 25 và phải khác 0!"
+                "Khóa dịch chuyển phải khác 0 và không được chia hết cho 26\n"
+                "(vì sẽ làm cho văn bản giữ nguyên không thay đổi)!"
             )
             return False
 

@@ -3,6 +3,29 @@
 <head>
     <title>Rail Fence Cipher</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <script>
+        function validateRailFence(formType) {
+            var textInput = document.getElementById(formType + 'Text').value;
+            var keyInput = document.getElementById(formType + 'Key');
+            var keyValue = parseInt(keyInput.value);
+            
+            // Đếm số lượng ký tự chữ cái thực tế (loại bỏ số, khoảng trắng, ký tự đặc biệt)
+            var letterCount = textInput.replace(/[^A-Za-z]/g, "").length;
+            
+            if (keyValue >= letterCount && letterCount > 0) {
+                keyInput.setCustomValidity('Số hàng rào phải nhỏ hơn số lượng chữ cái thực tế (Hiện có: ' + letterCount + ' chữ)');
+                keyInput.reportValidity();
+                return false;
+            } else if (keyValue < 2) {
+                keyInput.setCustomValidity('Số hàng rào phải lớn hơn hoặc bằng 2!');
+                keyInput.reportValidity();
+                return false;
+            } else {
+                keyInput.setCustomValidity('');
+                return true;
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container mt-4">
@@ -12,14 +35,14 @@
             <tr><td style="font-weight: bold; color: blue">ENCRYPTION (MÃ HÓA)</td></tr>
             <tr>
                 <td>
-                    <form method="POST" action="/railfence/encrypt">
+                    <form method="POST" action="/railfence/encrypt" onsubmit="return validateRailFence('encrypt')">
                         <div class="mb-3">
-                            <label class="form-label">Plain text (Chỉ nhập chữ cái tiếng Anh không dấu):</label>
-                            <input type="text" class="form-control" name="inputPlainText" pattern="[A-Za-z\s]+" title="Văn bản chỉ được chứa ký tự chữ cái tiếng Anh không dấu (A-Z, a-z) và khoảng trắng" placeholder="Nhập chuỗi văn bản" required autofocus/>
+                            <label class="form-label">Plain text:</label>
+                            <input type="text" id="encryptText" class="form-control" name="inputPlainText" placeholder="Nhập chuỗi văn bản" required autofocus oninput="document.getElementById('encryptKey').setCustomValidity('');"/>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Key (Số hàng rào từ 2 trở lên):</label>
-                            <input type="number" class="form-control" name="inputKeyPlain" min="2" step="1" title="Số hàng rào phải là số nguyên lớn hơn hoặc bằng 2" placeholder="Ví dụ: 3" required/>
+                            <label class="form-label">Key:</label>
+                            <input type="number" id="encryptKey" class="form-control" name="inputKeyPlain" min="2" step="1" placeholder="Ví dụ: 3" required oninput="validateRailFence('encrypt')"/>
                         </div>
                         <button type="submit" class="btn btn-primary">Encrypt</button>
                     </form>
@@ -28,14 +51,14 @@
             <tr><td style="font-weight: bold; color: green">DECRYPTION (GIẢI MÃ)</td></tr>
             <tr>
                 <td>
-                    <form method="POST" action="/railfence/decrypt">
+                    <form method="POST" action="/railfence/decrypt" onsubmit="return validateRailFence('decrypt')">
                         <div class="mb-3">
-                            <label class="form-label">Cipher text (Chỉ nhập chữ cái tiếng Anh không dấu):</label>
-                            <input type="text" class="form-control" name="inputCipherText" pattern="[A-Za-z\s]+" title="Văn bản mật mã chỉ được chứa ký tự chữ cái tiếng Anh không dấu (A-Z, a-z) và khoảng trắng" placeholder="Nhập chuỗi mật mã" required/>
+                            <label class="form-label">Cipher text:</label>
+                            <input type="text" id="decryptText" class="form-control" name="inputCipherText" placeholder="Nhập chuỗi mật mã" required oninput="document.getElementById('decryptKey').setCustomValidity('');"/>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Key (Số hàng rào từ 2 trở lên):</label>
-                            <input type="number" class="form-control" name="inputKeyCipher" min="2" step="1" title="Số hàng rào phải là số nguyên lớn hơn hoặc bằng 2" placeholder="Ví dụ: 3" required/>
+                            <label class="form-label">Key:</label>
+                            <input type="number" id="decryptKey" class="form-control" name="inputKeyCipher" min="2" step="1" placeholder="Ví dụ: 3" required oninput="validateRailFence('decrypt')"/>
                         </div>
                         <button type="submit" class="btn btn-success">Decrypt</button>
                     </form>

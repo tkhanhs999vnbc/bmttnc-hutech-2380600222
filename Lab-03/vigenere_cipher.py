@@ -33,22 +33,14 @@ class VigenereApp(QMainWindow):
             QMessageBox.warning(self, "Lỗi Nhập Liệu", f"{text_type} không được để trống!")
             return False
 
-        # 2. RÀNG BUỘC VĂN BẢN: Chỉ chấp nhận chữ cái tiếng Anh không dấu và khoảng trắng
-        if not re.match(r"^[a-zA-Z\s]+$", clean_text):
-            QMessageBox.warning(
-                self, 
-                "Lỗi Nhập Liệu", 
-                f"{text_type} chỉ được phép chứa các chữ cái tiếng Anh không dấu (A-Z, a-z).\n"
-                "Vui lòng không nhập số, ký tự đặc biệt hoặc chữ tiếng Việt có dấu!"
-            )
-            return False
+        # ĐÃ XÓA: Mục "2. RÀNG BUỘC VĂN BẢN" lọc chữ cái cũ đã được gỡ bỏ để hỗ trợ nhập số, ký tự đặc biệt tự do.
 
         # 3. Kiểm tra trống dữ liệu Khóa
         if not clean_key:
             QMessageBox.warning(self, "Lỗi Nhập Liệu", "Khóa (Key) không được để trống!")
             return False
 
-        # 4. RÀNG BUỘC KHÓA (KEY): Chỉ chấp nhận chữ cái tiếng Anh không dấu, KHÔNG chứa khoảng trắng hay ký tự lạ
+        # 4. GIỮ NGUYÊN RÀNG BUỘC KHÓA (KEY): Bắt buộc phải là chữ cái tiếng Anh không dấu, không khoảng trắng
         if not re.match(r"^[a-zA-Z]+$", clean_key):
             QMessageBox.warning(
                 self, 
